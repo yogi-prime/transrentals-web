@@ -1,0 +1,362 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Search, MapPin, Calendar as CalIcon, Clock, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { addDays, endOfWeek, isBefore, isSameDay } from 'date-fns';
+import { useSearchUI } from '@/SearchUIContext';
+
+/* ---------- Small DatePicker used in both full card & compact bar ---------- */
+function DatePicker({
+  label, value, onChange, minDate, compact = false,
+}: {
+  label: string;
+  value: Date | null;
+  onChange: (d: Date | null) => void;
+  minDate?: Date;
+  compact?: boolean;
+}) {
+  const today = new Date();
+  const isToday = value && isSameDay(value, today);
+
+  return (
+    <div className={`space-y-2 ${compact ? 'min-w-[210px]' : ''}`}>
+      {!compact && <label className="text-sm font-medium text-foreground">{label}</label>}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            className={`w-full ${compact ? 'h-10' : 'h-10'} rounded-md border pl-10 pr-3 text-left relative focus-premium ${
+              !value ? 'text-muted-foreground' : ''
+            }`}
+          >
+            <CalIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            {value ? value.toLocaleDateString() : 'dd-mm-yyyy'}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="p-3 w-auto">
+          <div className="flex flex-wrap gap-2 pb-3 border-b">
+            <Button
+              size="sm"
+              variant={isToday ? 'default' : 'outline'}
+              className={isToday ? 'btn-premium' : 'btn-secondary-premium'}
+              onClick={() => onChange(new Date())}
+            >
+              Today
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="btn-secondary-premium"
+              onClick={() => onChange(addDays(new Date(), 1))}
+            >
+              Tomorrow
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="btn-secondary-premium"
+              onClick={() => {
+                const end = endOfWeek(new Date(), { weekStartsOn: 1 });
+                onChange(addDays(end, -1)); // Sat
+              }}
+            >
+              Weekend
+            </Button>
+          </div>
+          <div className="pt-3">
+            <Calendar
+              mode="single"
+              selected={value ?? undefined}
+              onSelect={(d) => onChange(d ?? null)}
+              numberOfMonths={2}
+              disabled={(date) => (minDate ? isBefore(date, minDate) : false)}
+              initialFocus
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+/* ---------- A single form row; shared by full card and compact sticky bar ---------- */
+function FormRow({
+  compact,
+  pickupTime,
+  setPickupTime,
+  pickupDate,
+  setPickupDate,
+  returnDate,
+  setReturnDate,
+  cities,
+  today,
+}: {
+  compact?: boolean;
+  pickupTime: string;
+  setPickupTime: (v: string) => void;
+  pickupDate: Date | null;
+  setPickupDate: (d: Date | null) => void;
+  returnDate: Date | null;
+  setReturnDate: (d: Date | null) => void;
+  cities: string[];
+  today: Date;
+}) {
+  return (
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr,1fr,1fr,1fr,auto] gap-4 ${compact ? 'items-center' : ''}`}>
+      {/* Pickup Location */}
+      <div className="space-y-2">
+        {!compact && <label className="text-sm font-medium text-foreground">Pickup Location</label>}
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Select>
+            <SelectTrigger className={`pl-10 focus-premium ${compact ? 'h-10' : ''}`}>
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((city) => (
+                <SelectItem key={city} value={city.toLowerCase()}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Pickup Date */}
+      <DatePicker
+        label="Pickup Date"
+        value={pickupDate}
+        onChange={(d) => {
+          if (!d) return;
+          setPickupDate(d);
+          if (returnDate && isBefore(returnDate, d)) setReturnDate(d);
+        }}
+        minDate={today}
+        compact={compact}
+      />
+
+      {/* Pickup Time */}
+      <div className="space-y-2">
+        {!compact && <label className="text-sm font-medium text-foreground">Pickup Time</label>}
+        <div className="relative">
+          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Select value={pickupTime} onValueChange={setPickupTime}>
+            <SelectTrigger className={`pl-10 focus-premium ${compact ? 'h-10' : ''}`}>
+              <SelectValue placeholder="Select time" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 24 }, (_, i) => {
+                const v = `${String(i).padStart(2, '0')}:00`;
+                return (
+                  <SelectItem key={v} value={v}>
+                    {v}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Return Date */}
+      <DatePicker
+        label="Return Date"
+        value={returnDate}
+        onChange={(d) => d && setReturnDate(d)}
+        minDate={pickupDate ?? today}
+        compact={compact}
+      />
+
+      {/* Search Button */}
+      <div className={`${compact ? '' : 'space-y-2'} lg:self-end`}>
+        {!compact && <label className="text-sm font-medium text-transparent">Action</label>}
+        <Button className={`w-full btn-premium ${compact ? 'h-10 px-4' : 'h-10'}`}>
+          <Search className="w-4 h-4 mr-2" />
+          Search Vehicles
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- Main -------------------- */
+const GlobalSearch = ({ floatOverHero = true }: { floatOverHero?: boolean }) => {
+  const { searchType, setSearchType, docked, setDocked, headerH } = useSearchUI();
+
+  const [pickupDate, setPickupDate] = useState<Date | null>(null);
+  const [returnDate, setReturnDate] = useState<Date | null>(null);
+  const [pickupTime, setPickupTime] = useState<string>('');
+
+  useEffect(() => {
+    const now = new Date();
+    setPickupDate(now);
+    setReturnDate(now);
+    setPickupTime(`${String(now.getHours()).padStart(2, '0')}:00`);
+  }, []);
+
+  const services = [
+    { value: 'self-drive', label: 'Self Drive Car' },
+    { value: 'chauffeur',  label: 'Car with Driver' },
+    { value: 'bike',       label: 'Bike Rental' },
+    { value: 'taxi',       label: 'Taxi Services' },
+    { value: 'luxury',     label: 'Luxury Cars' },
+    { value: 'bus',        label: 'Bus Rental' },
+    { value: 'truck',      label: 'Truck Rental' },
+    { value: 'equipment',  label: 'Equipment Rental' },
+    { value: 'movers',     label: 'Packers & Movers' },
+    { value: 'tours',      label: 'Tours & Travel' },
+  ];
+  const topServices   = useMemo(() => services.slice(0, 5), []);
+  const moreServices  = useMemo(() => services.slice(5), []);
+  const moreValuesSet = useMemo(() => new Set(moreServices.map(s => s.value)), []);
+
+  const cities = [
+    'Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata',
+    'Pune','Ahmedabad','Jaipur','Surat','Lucknow','Kanpur',
+  ];
+  const today = useMemo(() => new Date(), []);
+
+  /* Dock trigger (observer on a 1px sentinel above the card) */
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setDocked(!entry.isIntersecting),
+      { root: null, rootMargin: `-${headerH + 8}px 0px 0px 0px`, threshold: 0 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [headerH, setDocked]);
+
+  /* Compact sticky bar (only row), shows only when docked */
+  const CompactBar = () => (
+<div
+  className="fixed left-1/2 -translate-x-1/2 z-[40] w-full px-4"
+  style={{ top: `calc(var(--header-h) - 1px)` }}  // overlaps under header
+  aria-hidden={!docked}
+>
+  <div
+    className="
+      relative
+      max-w-5xl mx-auto
+      bg-card/95 backdrop-blur-xl
+      shadow-lg
+      py-2 px-3
+      border-l border-r border-b
+      rounded-bl-xl rounded-br-xl
+    "
+  >
+    {/* optional: internal top mask to hide any accidental top edges */}
+    <div className="pointer-events-none absolute -top-2 left-0 right-0 h-2 bg-background rounded-t-none" />
+
+    <FormRow
+      compact
+      pickupTime={pickupTime}
+      setPickupTime={setPickupTime}
+      pickupDate={pickupDate}
+      setPickupDate={setPickupDate}
+      returnDate={returnDate}
+      setReturnDate={setReturnDate}
+      cities={cities}
+      today={today}
+    />
+  </div>
+</div>
+
+
+  );
+
+  return (
+    <div className="relative z-30">
+      {/* sentinel drives the docked state */}
+      <div ref={sentinelRef} className="h-px" aria-hidden />
+
+      {/* FLOAT over hero: pull upwards with a negative margin on large viewports */}
+      <div className={`${floatOverHero ? ' -mt-16 md:-mt-24 lg:-mt-28' : ''}`}>
+        <div className="container mx-auto px-4">
+          <div className="search-premium p-6 max-w-5xl mx-auto rounded-2xl">
+            <div className="mb-4 text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Find Your Perfect Ride</h2>
+              <p className="text-muted-foreground">Real-time availability from verified vendors across India</p>
+            </div>
+
+            {/* Service tabs (hidden here when docked; header shows pills) */}
+            <div
+              className={`flex flex-wrap gap-2 mb-6 justify-center transition-all duration-200 ${
+                docked ? 'opacity-0 pointer-events-none h-0 -mt-4' : 'opacity-100'
+              }`}
+            >
+              {topServices.map((s) => (
+                <Button
+                  key={s.value}
+                  variant={searchType === s.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSearchType(s.value)}
+                  className={searchType === s.value ? 'btn-premium' : 'btn-secondary-premium'}
+                >
+                  {s.label}
+                </Button>
+              ))}
+              <Select
+                value={moreValuesSet.has(searchType) ? searchType : undefined}
+                onValueChange={(v) => setSearchType(v)}
+              >
+                <SelectTrigger
+                  className={`w-44 ${
+                    moreValuesSet.has(searchType)
+                      ? 'btn-premium !h-9 !px-3 !py-0 !border-0'
+                      : 'btn-secondary-premium'
+                  }`}
+                >
+                  <SelectValue placeholder="More services…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {moreServices.map((service) => (
+                    <SelectItem key={service.value} value={service.value}>
+                      {service.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* FULL form row inside the card */}
+            <FormRow
+              pickupTime={pickupTime}
+              setPickupTime={setPickupTime}
+              pickupDate={pickupDate}
+              setPickupDate={setPickupDate}
+              returnDate={returnDate}
+              setReturnDate={setReturnDate}
+              cities={cities}
+              today={today}
+            />
+
+            {/* Quick links (stay in big card only) */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <div className="flex flex-wrap gap-2 justify-center">
+                <span className="text-sm text-muted-foreground">Popular searches:</span>
+                {['Mumbai to Pune','Delhi Airport','Bangalore Self Drive','Goa Tour Package','Corporate Taxi'].map((term, i) => (
+                  <Button key={i} variant="link" size="sm" className="h-auto p-0 text-primary hover:text-accent">
+                    {term}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPACT sticky pill under header */}
+      {docked && <CompactBar />}
+    </div>
+  );
+};
+
+export default GlobalSearch;
