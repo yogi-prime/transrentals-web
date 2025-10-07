@@ -14,7 +14,7 @@ const SDDestinations: React.FC = () => (
     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {DESTS.map(d => (
         <article key={d.id} className="rounded-xl border bg-white overflow-hidden">
-          <OptimizedImage rounded="rounded-none" src={d.img} alt={d.title}  className="h-40 w-full object-cover" />
+  <OptimizedImage rounded="rounded-none" src={d.img} alt={d.title}  width={640} height={360} sizes="(max-width:1024px) 50vw, 25vw" className="h-40 w-full object-cover" />
           <div className="p-3">
             <div className="font-medium">{d.title}</div>
             <div className="mt-1 flex flex-wrap gap-1">

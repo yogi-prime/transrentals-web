@@ -40,7 +40,7 @@ const SDVendorSpotlight: React.FC = () => {
           >
             {/* image + verified badge */}
             <div className="relative">
-              <OptimizedImage src={v.img} rounded="rounded-none" alt={v.name} className="h-36 w-full object-cover" />
+              <OptimizedImage src={v.img} rounded="rounded-none" alt={v.name} width={480} height={288} sizes="(max-width:768px) 80vw, 260px" className="h-36 w-full object-cover" />
               {v.verified && (
                 <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full
                   bg-emerald-600/95 text-white px-2 py-1 text-[11px] font-medium shadow">

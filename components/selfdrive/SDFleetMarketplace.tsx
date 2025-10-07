@@ -4,13 +4,14 @@ import Section from "./Section";
 import useHScroll from "./useHScroll";
 import { Button } from "@/components/ui/button";
 import OptimizedImage from "@/components/OptimizedImage";
+
 const FLEET = [
-  { id: "c1", name: "Hyundai i20",  tag: "Hatchback", price: 1499, img: "/selfdrive/vehicle/car-1.jpg" },
-  { id: "c2", name: "Swift Dzire",  tag: "Sedan",     price: 1599, img: "/selfdrive/vehicle/car-2.jpg" },
-  { id: "c3", name: "Creta",        tag: "SUV",       price: 1999, img: "/selfdrive/vehicle/car-3.jpg" },
-  { id: "c4", name: "Innova Crysta",tag: "MUV",       price: 2499, img: "/selfdrive/vehicle/car-4.jpg" },
-  { id: "c5", name: "Thar",         tag: "Lifestyle", price: 2599, img: "/selfdrive/vehicle/car-5.jpg" },
-  { id: "c6", name: "Fortuner",     tag: "Luxury",    price: 2599, img: "/selfdrive/vehicle/car-6.jpg" },
+  { id: "c1", name: "Hyundai i20", tag: "Hatchback", price: 1499, img: "/selfdrive/vehicle/car-1.webp" },
+  { id: "c2", name: "Swift Dzire", tag: "Sedan", price: 1599, img: "/selfdrive/vehicle/car-2.webp" },
+  { id: "c3", name: "Creta", tag: "SUV", price: 1999, img: "/selfdrive/vehicle/car-3.webp" },
+  { id: "c4", name: "Innova Crysta", tag: "MUV", price: 2499, img: "/selfdrive/vehicle/car-4.webp" },
+  { id: "c5", name: "Thar", tag: "Lifestyle", price: 2599, img: "/selfdrive/vehicle/car-5.webp" },
+  { id: "c6", name: "Fortuner", tag: "Luxury", price: 2599, img: "/selfdrive/vehicle/car-6.webp" },
 ];
 
 const SDFleetMarketplace: React.FC = () => {
@@ -27,44 +28,41 @@ const SDFleetMarketplace: React.FC = () => {
         </div>
       }
     >
-      <div ref={ref} className="flex gap-4 overflow-x-auto scroll-smooth pb-2
-        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={ref}
+        className="flex gap-4 overflow-x-auto scroll-smooth pb-2 snap-x snap-mandatory
+        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {FLEET.map((c) => (
-          <div
+          <article
             key={c.id}
-            className="min-w-[240px] max-w-[240px] rounded-xl border bg-white overflow-visible"
+            className="min-w-[260px] max-w-[260px] snap-start rounded-xl border bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
           >
             {/* image + favicon badge */}
-          {/* image + favicon (inside, no bg circle) */}
-<div className="relative">
-  {/* favicon FIRST so it always overlays */}
-  <OptimizedImage
-    src="/fevicon.webp"
-    alt="Brand"
-    className="
-      absolute top-2 left-2 md:top-3 md:left-3
-      h-7 w-7 md:h-8 md:w-8
-      rounded-full object-cover
-      drop-shadow-md z-20"   // 👈 ensures it's always above
-  />
+            <div className="relative">
+              {/* main vehicle image */}
+              <OptimizedImage
+                src={c.img}
+                alt={c.name}
+                width={480}
+                height={288}
+                sizes="(max-width:768px) 80vw, 240px"
+                eager={["c1", "c2"].includes(c.id)}
+                className="h-36 w-full object-cover"
+                rounded="rounded-none"
+              />
+            </div>
 
-  {/* main car image */}
-  <OptimizedImage
-    src={c.img}
-    alt={c.name}
-    className="h-36 w-full object-cover"
-    rounded="rounded-none"
-  />
-</div>
-
-
+            {/* content */}
             <div className="p-3">
               <div className="text-sm text-muted-foreground">{c.tag}</div>
-              <div className="font-semibold">{c.name}</div>
-              <div className="mt-1 text-sm">From ₹{c.price}/day</div>
+              <div className="font-medium">{c.name}</div>
+              <div className="mt-1 text-sm">
+                From ₹{c.price}/day
+              </div>
               <Button className="mt-3 w-full">See Details</Button>
             </div>
-          </div>
+          </article>
         ))}
       </div>
     </Section>
