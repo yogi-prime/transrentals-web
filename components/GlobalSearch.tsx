@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { addDays, endOfWeek, isBefore, isSameDay, format, getDay } from "date-fns";
 import { useSearchUI } from "@/components/providers/SearchUIContext";
 // GlobalSearch.tsx (TOP imports me add karo)
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 
 /* =========================================================================================
    TYPO + UTILS
@@ -542,20 +542,20 @@ function RenderField({
 const GlobalSearch = ({ floatOverHero = true }: { floatOverHero?: boolean }) => {
   const { searchType, setSearchType, setDocked, headerH } = useSearchUI();
     // 👇 add these
-  const navigate = useNavigate();
-  const location = useLocation();
+const router = useRouter();
+const pathname = usePathname();
 
-    useEffect(() => {
-    const seg = location.pathname.split("/").filter(Boolean)[0] as ServiceKey | undefined;
-    if (seg && seg !== searchType) setSearchType(seg);
-  }, [location.pathname]); // eslint-disable-line
+useEffect(() => {
+  const seg = (pathname?.split("/").filter(Boolean)[0] || "self-drive") as ServiceKey;
+  if (seg !== (searchType as ServiceKey)) setSearchType(seg);
+}, [pathname]); // eslint-disable-line
 
     // 👇 add this inside GlobalSearch component
-  const onTabChange = (k: ServiceKey) => {
-    setSearchType(k);
-    navigate(`/${k}`);               // URL change, SPA navigation
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+const onTabChange = (k: ServiceKey) => {
+  setSearchType(k);
+  router.push(`/${k}`);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
   const [pickupDate, setPickupDate] = useState<Date | null>(null);
   const [returnDate, setReturnDate] = useState<Date | null>(null);

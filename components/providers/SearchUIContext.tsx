@@ -1,6 +1,5 @@
 "use client";
-
-import React, { createContext, useContext, useState } from "react";
+import React, {createContext, useContext, useState} from "react";
 
 type Ctx = {
   searchType: string;
@@ -11,22 +10,22 @@ type Ctx = {
   setHeaderH: (n: number) => void;
 };
 
-const SearchUI = createContext<Ctx | null>(null);
+const CtxObj = createContext<Ctx | null>(null);
 
-export const SearchUIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [searchType, setSearchType] = useState<string>("self-drive");
+export const SearchUIProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
+  const [searchType, setSearchType] = useState("self-drive");
   const [docked, setDocked] = useState(false);
   const [headerH, setHeaderH] = useState(0);
 
   return (
-    <SearchUI.Provider value={{ searchType, setSearchType, docked, setDocked, headerH, setHeaderH }}>
+    <CtxObj.Provider value={{searchType, setSearchType, docked, setDocked, headerH, setHeaderH}}>
       {children}
-    </SearchUI.Provider>
+    </CtxObj.Provider>
   );
 };
 
 export const useSearchUI = () => {
-  const ctx = useContext(SearchUI);
-  if (!ctx) throw new Error("useSearchUI used outside provider");
-  return ctx;
+  const v = useContext(CtxObj);
+  if (!v) throw new Error("useSearchUI outside provider");
+  return v;
 };

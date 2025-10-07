@@ -57,7 +57,7 @@ const OptimizedImage: React.FC<Props> = ({
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
-        fetchpriority={eager ? "high" : "low"}
+        fetchPriority={eager ? "high" : "low"}
         className={`${className} object-cover ${loaded ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}
         onLoad={() => setLoaded(true)}
       />

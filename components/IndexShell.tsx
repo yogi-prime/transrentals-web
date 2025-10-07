@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import HeroMarket from "@/components/HeroMarket";
 import KPIStrip from "@/components/KPIStrip";
@@ -8,59 +10,40 @@ import FloatingPromo from "@/components/FloatingPromo";
 import EntryLeadModal from "@/components/EntryLeadModal";
 import ChatbotLeadForm from "@/components/ChatbotLeadForm";
 import DynamicSections from "@/components/sections/DynamicSections";
-import { useSearchUI } from "@/SearchUIContext";
+import { useSearchUI } from "@/components/providers/SearchUIContext";
 
-const VALID_SERVICES = [
-  "self-drive",
-  "chauffeur",
-  "bike",
-  "luxury",
-  "bus",
-  "truck",
-  "equipment",
-  "movers",
+const VALID = [
+  "self-drive","chauffeur","bike","luxury","bus","truck","equipment","movers",
 ];
 
-const IndexShell: React.FC = () => {
-  const { service } = useParams();
-  const navigate = useNavigate();
+export default function IndexShell({ service }: { service: string }) {
+  const router = useRouter();
   const { searchType, setSearchType } = useSearchUI();
 
-  // Sync URL → Context
+  // URL → Context sync + invalid ko replace
   useEffect(() => {
-    const s = service || "self-drive";
-    if (!VALID_SERVICES.includes(s)) {
-      navigate("/self-drive", { replace: true });
+    const s = VALID.includes(service) ? service : "self-drive";
+    if (s !== service) {
+      router.replace("/self-drive");
       return;
     }
-    if (searchType !== s) setSearchType(s as any);
-  }, [service]);
+    if (searchType !== s) setSearchType(s);
+  }, [service]); // eslint-disable-line
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
       <main>
-        <section>
-          <HeroMarket />
-        </section>
-
-        <section>
-          <KPIStrip />
-        </section>
-
-        {/* Hero ke niche dynamic sections */}
+        <section><HeroMarket /></section>
+        <section><KPIStrip /></section>
         <section className="mt-6">
           <DynamicSections service={searchType || "self-drive"} />
         </section>
       </main>
-
       <Footer />
       <FloatingPromo />
       <EntryLeadModal />
       <ChatbotLeadForm />
     </div>
   );
-};
-
-export default IndexShell;
+}
